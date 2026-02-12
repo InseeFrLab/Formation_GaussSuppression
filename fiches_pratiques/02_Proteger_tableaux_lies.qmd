@@ -1,0 +1,15 @@
+---
+title: "Protéger des tableaux liés"
+format: html
+editor: visual
+---
+
+# Protéger des tableaux liés
+
+Cette fiche a pour but de présenter deux façons de protéger des tableaux liés :
+
+-    `SuppressLinkedTables` (+ description des algorithmes `linkedGauss`)
+
+-    `SSBtools:table_by_formulas`).
+
+Attention : pour la protection des liens entre indicateurs, lire la fiche 03 sur les hiérarchies puis la fiche 07 sur les liens entre indicateurs.

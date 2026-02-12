@@ -1,0 +1,17 @@
+---
+title: "Hiérarchies"
+format: html
+editor: visual
+---
+
+# Hiérarchies
+
+Cette fiche présentera les paramètres permettant de prendre en charge des hiérarchies. Sur microdonnées (hiérarchies gérées implicitement) ou sur données tabulées (hiérarchies devant être précisées). Aborder :
+
+-   dimVar
+
+-   formulas
+
+-   collapse_vars
+
+-   substitute_vars dans table_by_formulas

@@ -1,0 +1,9 @@
+---
+title: "Miscellanées"
+format: html
+---
+
+# Miscelanées
+
+- Gestion des coûts : possible ou pas ?
+- Pondération données d'enquête

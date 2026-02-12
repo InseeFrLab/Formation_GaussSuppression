@@ -1,0 +1,14 @@
+---
+title: "Protéger des donnees déjà tabulees"
+format: html
+---
+
+# Protéger des données déjà tabulées
+
+Cette fiche détaille le moyen de fournir à GaussSuppression non pas des microdonnées mais des données tabulées. 
+Aborder :
+
+- preAggregate
+- aggregatePackage
+- ouput=inner (sur microdonnées, pour voir à quoi doivent ressembler les données prétabulées)
+- quels wrappers, quels paramètres à renseigner en cas de prétabulation (freqVar)

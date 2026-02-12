@@ -1,0 +1,16 @@
+---
+title: "00_Introduction"
+format: html
+---
+
+# Introduction
+
+Ces fiches méthodologiques permettent d'aborder pas à pas GaussSuppression dans la protection de données diffusées à l'Insee. GaussSuppression est un package développé par Statistics Norway.
+
+## Sommaire des fiches + résumé succinct du contenu de chacune
+
+## Bibliographie GS
+
+-   Doc du package, site / vignettes
+-   Article JMS + vidéo JMS ?
+-   lien sdcTools

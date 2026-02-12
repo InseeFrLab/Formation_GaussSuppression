@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-# Introduction
+# Protéger un tableau
 
 Cette fiche pratique montre comment protéger un tableau de données en supprimant des cellules avec `GaussSuppression`. Pour ce faire on utilisera les données du package.
 
@@ -25,9 +25,6 @@ Pour les tableaux de comptage on applique une règle de fréquence pour le secre
 Si on doit protéger un seul tableau de fréquence, alors il convient d'utiliser la fonction `SuppressSmallCounts()`.
 
 ## À partir des microdonnées
-
-
-
 
 ## À partir des données pré-tabulées
 
@@ -78,11 +75,9 @@ ncol(mun_acc_protege)
 
 La colonne `primary` est un booléen indiquant si la cellule est en secret primaire (de fréquence) ou non. La colonne `suppressed` est elle aussi un booléen qui indique quelles cellules doivent être supprimées (secret primaire et secret secondaire). Ainsi, toutes les cellules pour lesquelles `primary = FALSE` et `suppressed = TRUE` sont les cellules en secret secondaire.
 
-
 ## Options par défaut de `SuppressSmallCounts()`
 
 Par défaut `SuppressSmallCounts()` supprime en secret primaire les cellules qui valent zéro.
-
 
 # Tableau de volume
 
