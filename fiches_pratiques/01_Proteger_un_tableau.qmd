@@ -31,7 +31,7 @@ Si on doit protéger un seul tableau de fréquence, alors il convient d'utiliser
 Données pré-tabulées qui donnent le nombre d'accident (`freq`) ventilé par la municipalité (`mun`) et la gravité (`inj`) de l'accident.
 
 ```{r}
-mun_accidents <- SSBtoolsData("mun_accidents")
+mun_accidents <- SSBtools::SSBtoolsData("mun_accidents")
 head(mun_accidents)
 ```
 
@@ -81,6 +81,30 @@ Par défaut `SuppressSmallCounts()` supprime en secret primaire les cellules qui
 
 # Tableau de volume
 
+Pour diffuser un tableau qui présente un autre indicateur que simplement le nombre d'individus, par exemple le chiffre d'affaires des entreprises ou le revenu des ménages, alors il faut appliquer une règle supplémentaire : la **règle de dominance**.
+
+D'après la règle de dominance 1 unité contributrice à une cellule ne peut contribuer à plus de k% de la valeur de celle-ci. Pour la statistique d'entreprise k = 85.
+
 ## A partir des microdonnées
 
+On utilise un extrait de microdonnées, base individuelle sur des établissements contenant les variables suivantes :
+- `sector4` : secteur d'activité en 4 modalités
+- `sector2` : secteur d'activité en 2 modalités
+- `geo` : pays de l'établissement
+- `eu` : établissement européenne ou non
+- `company` : groupe auquel appartient l'établissement
+- `value` : l'indicateur étudié (on peut imaginer qu'il s'agit du chiffre d'affaires)
+
+```{r}
+magnitude1 <- SSBtools::SSBtoolsData("magnitude1")
+head(magnitude1)
+```
+
+
+
+
 ## A partir des données pré-tabulées
+
+
+
+
