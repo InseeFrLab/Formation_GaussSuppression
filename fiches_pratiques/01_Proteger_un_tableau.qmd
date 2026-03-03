@@ -16,6 +16,7 @@ On charge les packages nécessaires.
 
 ```{r}
 library(GaussSuppression)
+library(dplyr)
 ```
 
 # Tableau de fréquences
@@ -100,7 +101,116 @@ magnitude1 <- SSBtools::SSBtoolsData("magnitude1")
 head(magnitude1)
 ```
 
+Pour protéger un tableau de volumes on utilise la fonction `SuppressDominantCells()`. Dans un premier on protège un tableau qui ventile le chiffre d'affaires (`value`) par le secteur d'activité en 2 modalités (`sector2`) et le pays (`geo`).
 
+```{r}
+magnitude1_protege <- SuppressDominantCells(
+  data = magnitude1,
+  n = 1,
+  k = 85,
+  numVar = "value",
+  dimVar = c("sector2","geo")
+)
+```
+
+
+Il y a moins de lignes dans le tableau protégé que dans les microdonnées puisque ces-dernières ont été agrégées.
+
+```{r}
+nrow(magnitude1)
+nrow(magnitude1_protege)
+```
+
+On voit qu'il y a un secret primaire de dominance sur le croisement `public x Portugal`.
+
+```{r}
+magnitude1_protege %>% filter(primary)
+```
+
+Pour protéger ce secret primaire GaussSuppression supprimer trois autres cellules :
+
+- `private x Portugal`
+- `public x Spain`
+- `private x Spain`
+
+```{r}
+magnitude1_protege %>% filter(suppressed)
+```
+
+On passe d'un format long du tableau à un format large (i.e. tableau croisé) pour mieux comprendre commentle secret secondaire protège le secret primaire.
+
+```{r}
+library(tidyr)
+
+magnitude1_protege_pour_wide <- magnitude1_protege %>% 
+  mutate(
+  value_SP_SSD = case_when(
+    primary ~ "SP",
+    suppressed ~ "SSD",
+    TRUE ~ as.character(value))
+) %>% 
+  select(sector2,geo,value_SP_SSD)
+
+pivot_wider(magnitude1_protege_pour_wide,
+            names_from = geo,
+            values_from = value_SP_SSD) %>% 
+  relocate(Total, .after = last_col()) %>% # colonne Total en dernier
+  arrange(sector2 == "Total") # ligne Total en dernier
+```
+
+### Précisions sur le secret primaire de dominance
+
+Pour l'instant on doit croire "aveuglement" `GaussSuppression` sur la façon dont il pause le secret primaire. On pourrait recalculer les dominances de chaque cellules pour connaître le pourcentage de dominance. Cependant, il n'est pas nécessaire de faire ce travail puisque l'argument `allDominance` nous permet de récupérer cette information.
+
+```{r}
+magnitude1_protege_allDom <- SuppressDominantCells(
+  data = magnitude1,
+  n = 1,
+  k = 85,
+  numVar = "value",
+  dimVar = c("sector2","geo"),
+  allDominance = TRUE
+)
+
+head(magnitude1_protege_allDom)
+```
+
+En ajoutant cette option, on récupère des colonnes supplémentaires dans le masque qui décrivent la dominance de chacune des cellules :
+- `dominant1` : pourcentage de dominance du plus gros contributeur de la cellule
+- `max1contributor` : référence du plus gros contributeur
+- `n_contr` : nombre de contributeurs à la cellule, autrement dit la fréquence de la cellule
+- `n_non0_contr` : nombre de contributeurs non nuls à la cellule
+
+```{r}
+magnitude1_protege_allDom %>% filter(primary)
+```
+
+### Combiner règle de fréquence et règle de dominance
+
+Dans les faits lorsque l'on protège un tableau de volume il faut appliquer les deux types de règles vues précédemment :
+
+- règle de fréquence sur le nombre d'individus par cellule
+- règle de dominance sur la valeur de la cellule
+
+```{r}
+magnitude1_protege_freq_dom <- SuppressDominantCells(
+  data = magnitude1,
+  numVar = "value",
+  dimVar = c("sector2","geo"),
+  primary = c(DominanceRule, NContributorsRule), # utiliser règles freq et dom
+  n = 1, # param dom
+  k = 85, # param dom
+  maxN = 3, # param freq
+  allDominance = TRUE
+)
+
+head(magnitude1_protege_freq_dom)
+```
+
+
+```{r}
+magnitude1_protege_freq_dom %>% filter(primary)
+```
 
 
 ## A partir des données pré-tabulées
