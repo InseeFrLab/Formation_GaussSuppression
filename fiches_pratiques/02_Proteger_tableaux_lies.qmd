@@ -1,15 +1,78 @@
 ---
 title: "Protéger des tableaux liés"
 format: html
-editor: visual
+editor: source
 ---
-
-# Protéger des tableaux liés
 
 Cette fiche a pour but de présenter deux façons de protéger des tableaux liés :
 
--    `SuppressLinkedTables` (+ description des algorithmes `linkedGauss`)
+-   `SuppressLinkedTables()` (+ description des algorithmes `linkedGauss`)
 
--    `SSBtools:table_by_formulas`).
+-   `SSBtools:table_by_formulas()`.
 
 Attention : pour la protection des liens entre indicateurs, lire la fiche 03 sur les hiérarchies puis la fiche 07 sur les liens entre indicateurs.
+
+
+# Protéger des tableaux liés avec `SuppressLinkedTables()`
+
+Dans cet exemple, on reprend l'extrait de microdonnées du package `SSBtools`. Ce sont des données sur des entreprises, on dira que la colonne `value` représente le chiffre d'affaires de chacune d'entre elles.
+
+```{r}
+magnitude1 <- SSBtoolsData("magnitude1")
+```
+
+With trick "sector4 - sector4" and "geo - geo" to ensure same names in output
+
+```{r}
+masque_SLT <- SuppressLinkedTables(
+  data = magnitude1,  
+  fun = SuppressDominantCells, 
+  withinArg = list(list(formula = ~(geo + eu) * sector2 + sector4 - sector4), 
+                   list(formula = ~eu:sector4 - 1 + geo - geo), 
+                   list(formula = ~geo + eu + sector4 - 1)), 
+  dominanceVar  = "value", 
+  primary = c(DominanceRule, NContributorsRule), # utiliser règles freq et dom
+  n = 1, # param dom
+  k = 85, # param dom
+  maxN = 2, # param freq
+  contributorVar = "company",
+  linkedGauss = "consistent")
+
+head(masque_SLT)
+```
+
+
+```{r}
+a1 <- SuppressDominantCells(
+  magnitude1, 
+  formula = list(table_1 = ~(geo + eu) * sector2, 
+                 table_2 = ~eu:sector4 - 1,
+                 table_3 = ~(geo + eu) + sector4 - 1), 
+  dominanceVar = "value", 
+  pPercent = 10, 
+  contributorVar = "company", 
+  linkedGauss = "consistent")
+print(a1)
+```
+
+
+# Protéger des tableaux liés avec `SSBtools:table_by_formulas()`
+
+```{r}
+a2 <- tables_by_formulas(
+  magnitude1,
+  table_fun = SuppressDominantCells, 
+  table_formulas = list(table_1 = ~region * sector2, 
+                        table_2 = ~region1:sector4 - 1, 
+                        table_3 = ~region + sector4 - 1), 
+  substitute_vars = list(region = c("geo", "eu"), region1 = "eu"), 
+  collapse_vars = list(sector = c("sector2", "sector4")), 
+  dominanceVar  = "value", 
+  pPercent = 10, 
+  contributorVar = "company",
+  linkedGauss = "consistent") 
+print(a2)   
+```
+
+
+
