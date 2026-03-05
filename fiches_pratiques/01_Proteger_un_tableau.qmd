@@ -1,7 +1,7 @@
 ---
 title: "Protéger un tableau"
 format: html
-editor: visual
+editor: source
 ---
 
 # Protéger un tableau
@@ -51,7 +51,7 @@ mun_acc_protege <- SuppressSmallCounts(
   maxN = 3, # seuil de fréquence, secret primaire
   dimVar = 1:2, # variables de croisement
   freqVar = 3 # fréquence
-  )
+)
 ```
 
 Suite à la protection des lignes ont été ajoutées dans les données.
@@ -88,13 +88,7 @@ D'après la règle de dominance 1 unité contributrice à une cellule ne peut co
 
 ## A partir des microdonnées
 
-On utilise un extrait de microdonnées, base individuelle sur des établissements contenant les variables suivantes :
-- `sector4` : secteur d'activité en 4 modalités
-- `sector2` : secteur d'activité en 2 modalités
-- `geo` : pays de l'établissement
-- `eu` : établissement européenne ou non
-- `company` : groupe auquel appartient l'établissement
-- `value` : l'indicateur étudié (on peut imaginer qu'il s'agit du chiffre d'affaires)
+On utilise un extrait de microdonnées, base individuelle sur des établissements contenant les variables suivantes : - `sector4` : secteur d'activité en 4 modalités - `sector2` : secteur d'activité en 2 modalités - `geo` : pays de l'établissement - `eu` : établissement européenne ou non - `company` : groupe auquel appartient l'établissement - `value` : l'indicateur étudié (on peut imaginer qu'il s'agit du chiffre d'affaires)
 
 ```{r}
 magnitude1 <- SSBtools::SSBtoolsData("magnitude1")
@@ -113,7 +107,6 @@ magnitude1_protege <- SuppressDominantCells(
 )
 ```
 
-
 Il y a moins de lignes dans le tableau protégé que dans les microdonnées puisque ces-dernières ont été agrégées.
 
 ```{r}
@@ -129,9 +122,9 @@ magnitude1_protege %>% filter(primary)
 
 Pour protéger ce secret primaire GaussSuppression supprimer trois autres cellules :
 
-- `private x Portugal`
-- `public x Spain`
-- `private x Spain`
+-   `private x Portugal`
+-   `public x Spain`
+-   `private x Spain`
 
 ```{r}
 magnitude1_protege %>% filter(suppressed)
@@ -144,11 +137,11 @@ library(tidyr)
 
 magnitude1_protege_pour_wide <- magnitude1_protege %>% 
   mutate(
-  value_SP_SSD = case_when(
-    primary ~ "SP",
-    suppressed ~ "SSD",
-    TRUE ~ as.character(value))
-) %>% 
+    value_SP_SSD = case_when(
+      primary ~ "SP",
+      suppressed ~ "SSD",
+      TRUE ~ as.character(value))
+  ) %>% 
   select(sector2,geo,value_SP_SSD)
 
 pivot_wider(magnitude1_protege_pour_wide,
@@ -175,11 +168,7 @@ magnitude1_protege_allDom <- SuppressDominantCells(
 head(magnitude1_protege_allDom)
 ```
 
-En ajoutant cette option, on récupère des colonnes supplémentaires dans le masque qui décrivent la dominance de chacune des cellules :
-- `dominant1` : pourcentage de dominance du plus gros contributeur de la cellule
-- `max1contributor` : référence du plus gros contributeur
-- `n_contr` : nombre de contributeurs à la cellule, autrement dit la fréquence de la cellule
-- `n_non0_contr` : nombre de contributeurs non nuls à la cellule
+En ajoutant cette option, on récupère des colonnes supplémentaires dans le masque qui décrivent la dominance de chacune des cellules : - `dominant1` : pourcentage de dominance du plus gros contributeur de la cellule - `max1contributor` : référence du plus gros contributeur - `n_contr` : nombre de contributeurs à la cellule, autrement dit la fréquence de la cellule - `n_non0_contr` : nombre de contributeurs non nuls à la cellule
 
 ```{r}
 magnitude1_protege_allDom %>% filter(primary)
@@ -189,8 +178,8 @@ magnitude1_protege_allDom %>% filter(primary)
 
 Dans les faits lorsque l'on protège un tableau de volume il faut appliquer les deux types de règles vues précédemment :
 
-- règle de fréquence sur le nombre d'individus par cellule
-- règle de dominance sur la valeur de la cellule
+-   **règle de fréquence** sur le nombre d'individus par cellule
+-   **règle de dominance** sur la valeur de la cellule
 
 ```{r}
 magnitude1_protege_freq_dom <- SuppressDominantCells(
@@ -207,14 +196,19 @@ magnitude1_protege_freq_dom <- SuppressDominantCells(
 head(magnitude1_protege_freq_dom)
 ```
 
+On voit que le seuil de dominance n'est pas atteint pour `public x Spain`, cette cellule est en secret primaire de fréquence (n_contr < 3).
 
 ```{r}
 magnitude1_protege_freq_dom %>% filter(primary)
 ```
 
+Une fois que le tableau est protégé, on étudie la perte d'information. Un tableau de statistiques descriptives est osuvent suffisant, il nous donne une idée de la perte d'information résultant du processus de protection. Ici, on utilise `stat_secret_GS()` une fonction dont la code source se trouve dans le dossier `fonction`.
 
-## A partir des données pré-tabulées
+```{r}
+source("../fonctions/stats_secret_GS.R")
 
+stats_secret_GS(magnitude1_protege_freq_dom,"value")
+```
 
-
+Pour protéger les deux cellules en secret primaire il a fallu en supprimer deux autres. On diffuse 77% de l'information statisituqe sur les chiffres d'affaires.
 
