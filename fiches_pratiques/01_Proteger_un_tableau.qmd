@@ -1,10 +1,11 @@
 ---
 title: "Protéger un tableau"
-format: html
+format: 
+  html:
+    toc: true
 editor: source
+number-sections: true
 ---
-
-# Protéger un tableau
 
 Cette fiche pratique montre comment protéger un tableau de données en supprimant des cellules avec `GaussSuppression`. Pour ce faire on utilisera les données du package.
 
@@ -15,6 +16,8 @@ Cette fiche pratique montre comment protéger un tableau de données en supprima
 On charge les packages nécessaires.
 
 ```{r}
+#| message: false
+#| warning: false
 library(GaussSuppression)
 library(dplyr)
 ```
@@ -27,9 +30,30 @@ Si on doit protéger un seul tableau de fréquence, alors il convient d'utiliser
 
 ## À partir des microdonnées
 
+```{r}
+sprt_emp <- SSBtools::SSBtoolsData("sprt_emp")
+head(sprt_emp)
+```
+
+```{r}
+sprt_emp_protege <- SuppressSmallCounts(
+  data = sprt_emp,
+  maxN = 4, # seuil de fréquence, secret primaire
+  dimVar = c("age","geo") # variables de croisement
+)
+```
+
+
+::: {.callout-note title="Argument `maxN`"}
+
+Si le **seuil de fréquence est à 10**, i.e. toutes les cellules qui regroupent moins de 10 individus sont en secret, alors il faut spécifier `maxN = 9`.
+
+:::
+
+
 ## À partir des données pré-tabulées
 
-Données pré-tabulées qui donnent le nombre d'accident (`freq`) ventilé par la municipalité (`mun`) et la gravité (`inj`) de l'accident.
+Données pré-tabulées qui donnent le nombre d'accidents (`freq`) ventilé par la municipalité (`mun`) et la gravité (`inj`) de l'accident.
 
 ```{r}
 mun_accidents <- SSBtools::SSBtoolsData("mun_accidents")
@@ -48,9 +72,9 @@ Les fonctions de suppression de `GaussSuppression` calculent les marges à parti
 ```{r}
 mun_acc_protege <- SuppressSmallCounts(
   data = mun_accidents,
-  maxN = 3, # seuil de fréquence, secret primaire
-  dimVar = 1:2, # variables de croisement
-  freqVar = 3 # fréquence
+  maxN = 2, # seuil de fréquence, secret primaire
+  dimVar = c("mun","inj"), # variables de croisement
+  freqVar = "freq" # fréquence
 )
 ```
 
@@ -76,9 +100,40 @@ ncol(mun_acc_protege)
 
 La colonne `primary` est un booléen indiquant si la cellule est en secret primaire (de fréquence) ou non. La colonne `suppressed` est elle aussi un booléen qui indique quelles cellules doivent être supprimées (secret primaire et secret secondaire). Ainsi, toutes les cellules pour lesquelles `primary = FALSE` et `suppressed = TRUE` sont les cellules en secret secondaire.
 
-## Options par défaut de `SuppressSmallCounts()`
+Quand on regarde les premières lignes du masque, on voit que la cellule `Total x unknown` a une fréquence de 0 qui est en secret primaire. **Par défaut `SuppressSmallCounts()` met en secret primaire les cellules qui valent zéro**. Or, à l'Insee les fréquences qui valent 0 ne sont pas considérées comme sensibles et n'ont pas a être protégées par du secret primaire (ni même du secret secondaire).
 
-Par défaut `SuppressSmallCounts()` supprime en secret primaire les cellules qui valent zéro.
+Quand on considère que les zéros sont sensibles il y a 22 cellules en secret primaire.
+
+```{r}
+mun_acc_protege %>% filter(primary) %>% nrow()
+```
+
+Pour que les fréquences à zéro ne soient pas en secret primaire on utilise l'argument `protectZeros` :
+
+```{r}
+mun_acc_protege_pas_zero <- SuppressSmallCounts(
+  data = mun_accidents,
+  maxN = 2,
+  dimVar = 1:2,
+  freqVar = 3,
+  protectZeros = FALSE # les zéros ne sont pas en secret primaire
+)
+```
+
+```{r}
+mun_acc_protege_pas_zero %>% filter(primary)
+```
+
+Il n'y a plus que 6 cellules en secret primaire.
+
+Par défaut, les zéros sont des candidats au secret secondaire. Ainsi, même lorsque l'on exclut les zéros du secret primaire ils peuvent être cachés en secret secondaire. A l'Insee, on ne permet pas de supprimer les zéros même en secret secondaire car on fait l'hypothèse qu'il s'agit de zéros structurels. Ainsi, les utilisateurs des données peuvent facilement savoir quelles cellules ont une fréquence à zéro et pourraient donc déduire les informations des cellules que ces zéros protègent. Pour que les zéros ne soient pas des candidats au secret secondaire on utilise l'argument `secondaryZeros = FALSE`.
+
+::: {.callout-warning}
+
+Quand les arguments `protectZeros` et `secondaryZeros` sont `FALSE`, alors les cellules qui ont une **fréquence ou une valeur de zéro** ne sont pas en secret primaire et secondaire. Or, à l'Insee on ne veut **pas mettre de secret uniquement sur les cellules dont la fréquence vaut 0**. Les cellules dont la fréquence différente de 0 et la valeur vaut 0 peuvent être protégées.
+
+:::
+
 
 # Tableau de volume
 
@@ -88,7 +143,14 @@ D'après la règle de dominance 1 unité contributrice à une cellule ne peut co
 
 ## A partir des microdonnées
 
-On utilise un extrait de microdonnées, base individuelle sur des établissements contenant les variables suivantes : - `sector4` : secteur d'activité en 4 modalités - `sector2` : secteur d'activité en 2 modalités - `geo` : pays de l'établissement - `eu` : établissement européenne ou non - `company` : groupe auquel appartient l'établissement - `value` : l'indicateur étudié (on peut imaginer qu'il s'agit du chiffre d'affaires)
+On utilise un extrait de microdonnées, base individuelle sur des établissements contenant les variables suivantes : 
+
+- `sector4` : secteur d'activité en 4 modalités 
+- `sector2` : secteur d'activité en 2 modalités 
+- `geo` : pays de l'établissement 
+- `eu` : établissement européenne ou non 
+- `company` : groupe auquel appartient l'établissement 
+- `value` : l'indicateur étudié (on peut imaginer qu'il s'agit du chiffre d'affaires)
 
 ```{r}
 magnitude1 <- SSBtools::SSBtoolsData("magnitude1")
@@ -189,7 +251,7 @@ magnitude1_protege_freq_dom <- SuppressDominantCells(
   primary = c(DominanceRule, NContributorsRule), # utiliser règles freq et dom
   n = 1, # param dom
   k = 85, # param dom
-  maxN = 3, # param freq
+  maxN = 2, # param freq
   allDominance = TRUE
 )
 
@@ -210,5 +272,5 @@ source("../fonctions/stats_secret_GS.R")
 stats_secret_GS(magnitude1_protege_freq_dom,"value")
 ```
 
-Pour protéger les deux cellules en secret primaire il a fallu en supprimer deux autres. On diffuse 77% de l'information statisituqe sur les chiffres d'affaires.
+Pour protéger les deux cellules en secret primaire il a fallu en supprimer deux autres. On diffuse 77% de l'information statistique sur les chiffres d'affaires.
 
